@@ -1,0 +1,72 @@
+services:
+  postgres3:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 10s
+      retries: 5
+
+  airflow3-init:
+    image: apache/airflow:3.0.1
+    depends_on:
+      postgres3:
+        condition: service_healthy
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres3/airflow
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__WEBSERVER__SECRET_KEY: airflow3-secret-key
+      _AIRFLOW_DB_MIGRATE: "true"
+      _AIRFLOW_WWW_USER_CREATE: "true"
+      _AIRFLOW_WWW_USER_USERNAME: airflow
+      _AIRFLOW_WWW_USER_PASSWORD: airflow
+    command: version
+    volumes:
+      - ../../dags:/opt/airflow/dags
+
+  airflow3:
+    image: apache/airflow:3.0.1
+    depends_on:
+      postgres3:
+        condition: service_healthy
+      airflow3-init:
+        condition: service_completed_successfully
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres3/airflow
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__WEBSERVER__SECRET_KEY: airflow3-secret-key
+      AIRFLOW__API__AUTH_BACKENDS: airflow.api.auth.backend.basic_auth
+    ports:
+      - "8081:8080"
+    volumes:
+      - ../../dags:/opt/airflow/dags
+      - airflow3-logs:/opt/airflow/logs
+    command: webserver
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  airflow3-scheduler:
+    image: apache/airflow:3.0.1
+    depends_on:
+      airflow3:
+        condition: service_healthy
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres3/airflow
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__WEBSERVER__SECRET_KEY: airflow3-secret-key
+    volumes:
+      - ../../dags:/opt/airflow/dags
+      - airflow3-logs:/opt/airflow/logs
+    command: scheduler
+
+volumes:
+  airflow3-logs:

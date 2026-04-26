@@ -226,14 +226,16 @@ Architectural gaps noted from code review:
 
 | Severity | Area | Description |
 |----------|------|-------------|
-| Medium | CI/CD | No CI pipeline exists. Tests must be run manually before merging. |
 | Medium | Security | Credentials are stored in plaintext `.env` file. No secrets manager integration. |
 | Medium | Observability | No external metrics export (Prometheus, Datadog, etc.). No alerting integration. |
 | Low | Deployment | No Docker image for the agent itself. Production deployment process is undocumented. |
-| Low | `db/store.py:200` | `count_investigations_since` uses `datetime.utcnow()` (deprecated in Python 3.12+) instead of `datetime.now(timezone.utc)`. |
-| Low | `db/store.py:206` | `most_failing_dag` uses `datetime.utcnow()` (deprecated) instead of `datetime.now(timezone.utc)`. |
+| Low | `db/store.py:221` | `count_investigations_since` uses `datetime.utcnow()` (deprecated in Python 3.12+) instead of `datetime.now(timezone.utc)`. |
+| Low | `db/store.py:230` | `most_failing_dag` uses `datetime.utcnow()` (deprecated) instead of `datetime.now(timezone.utc)`. |
+| Low | `db/store.py:435` | `get_dag_duration_history` uses `datetime.utcnow()` (deprecated) instead of `datetime.now(timezone.utc)`. |
+| Low | `db/store.py:464` | `get_recent_anomalies` uses `datetime.utcnow()` (deprecated) instead of `datetime.now(timezone.utc)`. |
 | Low | Airflow client | `list_failed_dag_runs` has an identical `params` block for both v1 and v2 — the comment suggests they should differ but they currently don't. |
 | Low | LangGraph checkpoint | No TTL or cleanup for `.langgraph.db` checkpoints. Long-running deployments will accumulate stale thread state indefinitely. |
+| Low | CI | Integration tests are excluded from the GitHub Actions CI pipeline. Run `make test-int` manually before merging changes to `airflow_client.py` or integration test files. |
 
 ## Contacts & Escalation
 

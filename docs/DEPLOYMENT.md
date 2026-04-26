@@ -5,18 +5,22 @@
 | Environment | URL / Cluster | Deployed From | Notes |
 |-------------|--------------|---------------|-------|
 | Local development | `http://localhost:8501` (UI), `http://localhost:8080` (Airflow 2), `http://localhost:8081` (Airflow 3) | Manual (`make poller`, `make ui`) | Docker Compose Airflow stacks |
-| Production | Not found in codebase — fill in manually | Not found in codebase — fill in manually | No CI/CD pipeline exists |
+| Production | Not found in codebase — fill in manually | Not found in codebase — fill in manually | Fill in manually |
 
 ## CI/CD Pipeline
 
-No CI/CD configuration was found in the repository (no `.github/workflows/`, `.gitlab-ci.yml`, `Jenkinsfile`, or `.circleci/` directory). All testing and deployment is currently manual.
+A GitHub Actions workflow is defined in `.github/workflows/ci.yml`. It triggers on every push and pull request targeting the `main` branch.
 
-Recommended pipeline stages to add:
+**Pipeline stages:**
 
-1. **Lint** — `uv run ruff check .`
-2. **Format check** — `uv run ruff format --check .`
-3. **Unit tests** — `uv run pytest tests/unit/ -v`
-4. **Integration tests** (optional, Docker required) — `uv run pytest tests/integration/ -m integration -v`
+| Job | Trigger | Steps |
+|-----|---------|-------|
+| `lint` (Lint & type-check) | push/PR to `main` | `ruff format --check .`, `ruff check .`, `mypy agent/ db/ config.py poller.py` |
+| `test` (Unit tests) | push/PR to `main` | `pytest tests/unit/ -v --cov=agent --cov=db --cov-report=term-missing` |
+
+Both jobs run on `ubuntu-latest` using Python 3.11 and `astral-sh/setup-uv@v3` to manage the virtual environment.
+
+Integration tests are **not** part of CI because they require live Docker Compose Airflow stacks. Run them manually with `make test-int` before merging changes that touch `agent/tools/airflow_client.py` or `tests/integration/`.
 
 ## Release Process
 

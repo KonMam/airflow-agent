@@ -215,11 +215,14 @@ print(col.get(limit=5))
 
 ## Code Style & Conventions
 
-Linting and formatting are handled by `ruff`:
+Linting, formatting, and type-checking are handled by `ruff` and `mypy`:
 ```bash
-make lint   # uv run ruff check .
-make fmt    # uv run ruff format .
+make lint                                        # uv run ruff check .
+make fmt                                         # uv run ruff format .
+uv run mypy agent/ db/ config.py poller.py      # type-check (matches CI)
 ```
+
+`mypy` is configured in `pyproject.toml` with `ignore_missing_imports = true` and `disallow_untyped_defs = false`, so it primarily catches obvious type errors without requiring full annotation coverage.
 
 Key conventions observed in the codebase:
 - Node functions return a plain `dict` of the state fields they modify; LangGraph merges these into `AgentState`.

@@ -267,4 +267,4 @@ erDiagram
 
 - **Anomaly detection via IQR-P90 heuristic**: Task duration anomalies are detected using `p90 + 2.5 * IQR` as the threshold (in `check_anomaly_for_run`), requiring at least 5 historical data points before firing.
 
-- **No CI/CD pipeline**: There is no `.github/workflows/`, `.gitlab-ci.yml`, or equivalent CI configuration in the repository. All testing and deployment is manual.
+- **GitHub Actions CI**: A two-job pipeline in `.github/workflows/ci.yml` runs on every push and PR to `main`. The `lint` job runs `ruff format --check`, `ruff check`, and `mypy`. The `test` job runs `uv run pytest tests/unit/ -v --cov=agent --cov=db`. Integration tests are not included in CI because they require Docker with running Airflow containers.
